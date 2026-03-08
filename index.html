@@ -1427,6 +1427,83 @@
   </script>
 
   <script>
+    // ==================================================
+    // NEW: ON-SCREEN CONSOLE FOR MOBILE DEBUGGING
+    // ==================================================
+    (function () {
+      const consoleContainer = document.createElement('div');
+      consoleContainer.style.position = 'fixed';
+      consoleContainer.style.bottom = '0';
+      consoleContainer.style.left = '0';
+      consoleContainer.style.width = '100%';
+      consoleContainer.style.maxHeight = '30%';
+      consoleContainer.style.overflowY = 'auto';
+      consoleContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+      consoleContainer.style.color = 'white';
+      consoleContainer.style.zIndex = '99999';
+      consoleContainer.style.fontSize = '12px';
+      consoleContainer.style.padding = '10px';
+      consoleContainer.style.boxSizing = 'border-box';
+      document.body.appendChild(consoleContainer);
+
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Close Console';
+      closeButton.style.position = 'absolute';
+      closeButton.style.top = '5px';
+      closeButton.style.right = '5px';
+      consoleContainer.appendChild(closeButton);
+      closeButton.onclick = () => consoleContainer.style.display = 'none';
+
+      function log(type, args) {
+        const p = document.createElement('p');
+        p.style.borderBottom = '1px solid #555';
+        p.style.padding = '5px 0';
+        p.style.margin = '0';
+        p.style.fontFamily = 'monospace';
+        if (type === 'error') p.style.color = '#ff8a8a';
+        if (type === 'warn') p.style.color = '#ffeb3b';
+        
+        let content = Array.from(args).map(arg => {
+            if (typeof arg === 'object' && arg !== null) {
+                return JSON.stringify(arg, null, 2);
+            }
+            return arg.toString();
+        }).join(' ');
+
+        // This is the crucial part to make the link clickable
+        p.innerHTML = content.replace(/(https:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #8ab4f8;">$1</a>');
+        consoleContainer.appendChild(p);
+        consoleContainer.scrollTop = consoleContainer.scrollHeight;
+      }
+
+      const originalError = console.error;
+      console.error = function(...args) {
+        log('error', args);
+        originalError.apply(console, args);
+      };
+      const originalLog = console.log;
+      console.log = function(...args) {
+        log('log', args);
+        originalLog.apply(console, args);
+      };
+       const originalWarn = console.warn;
+      console.warn = function(...args) {
+        log('warn', args);
+        originalWarn.apply(console, args);
+      };
+    })();
+    // ==================================================
+
+    // ---------- Utilities ----------
+    const $ = (sel, root=document) => root.querySelector(sel);
+    // ... all of your existing website JavaScript follows
+
+    // ==================================================
+
+    // ---------- Utilities ----------
+    const $ = (sel, root=document) => root.querySelector(sel);
+    // ... all of your existing website JavaScript follows
+
     // ---------- Utilities ----------
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => root.querySelectorAll(sel);
