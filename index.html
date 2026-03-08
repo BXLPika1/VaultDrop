@@ -125,7 +125,7 @@
       display:flex; gap:16px;
       align-items:center;
     }
-    nav a, .nav-btn{
+    nav a{
       text-decoration:none;
       color:var(--muted);
       font-weight:600;
@@ -138,8 +138,8 @@
       border:none;
       font-family: inherit;
     }
-    nav a:hover, .nav-btn:hover{ color:var(--ink); background: rgba(255,255,255,.06); transform: translateY(-1px); }
-    nav a:active, .nav-btn:active{ transform: translateY(0px) scale(.99); }
+    nav a:hover{ color:var(--ink); background: rgba(255,255,255,.06); transform: translateY(-1px); }
+    nav a:active{ transform: translateY(0px) scale(.99); }
 
     .nav-cta{
       display:flex; align-items:center; gap:10px;
@@ -764,7 +764,7 @@
       .hero-grid{ grid-template-columns: 1fr; }
       .nav-cta{ min-width:auto; }
       .brand{ min-width:auto; }
-      #mainNav li:not(#homeNav){ display:none; }
+      #mainNav{ display:none; }
     }
     @media (max-width: 720px){
       .row{ grid-template-columns: 1fr; }
@@ -799,7 +799,6 @@
 
       <nav aria-label="Primary">
         <ul id="mainNav">
-          <li id="homeNav" class="hidden"><button id="homeBtn" class="nav-btn">Home</button></li>
           <li><a href="#features">Features</a></li>
           <li><a href="#security">Security</a></li>
           <li><a href="#policies">Policies</a></li>
@@ -808,6 +807,7 @@
       </nav>
 
       <div class="nav-cta">
+        <button id="homeBtn" class="btn ghost hidden">Home</button>
         <button class="btn ghost hidden" id="signOutBtn" type="button">
           Sign Out
         </button>
@@ -856,7 +856,7 @@
 
           <h1>Cloud storage that feels like a vault—not a feed.</h1>
           <p class="lead">
-            VaultDrop is a <b>frontend concept</b> for pay-once storage with smart expiration, VirusTotal checks for suspicious downloads, and clear policies for registered vs. unregistered users.
+            VaultDrop is a <b>frontend concept</b> for pay-once storage with smart expiration, malware scan confirmations, and clear policies for registered vs. unregistered users.
           </p>
 
           <div class="hero-actions">
@@ -866,12 +866,6 @@
                 <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </button>
-            <a class="btn" href="#build">
-              I don’t have servers — what now?
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </a>
           </div>
 
           <div class="micro" role="list" aria-label="Highlights">
@@ -895,7 +889,7 @@
             <div class="panel-head">
               <div>
                 <h2>Upload</h2>
-                <p>Choose a file to simulate quota, expiry controls, and VirusTotal-style download confirmation.</p>
+                <p>Choose a file to simulate quota, expiry controls, and malware scan confirmation.</p>
               </div>
               <span class="badge" id="planBadge">PLAN: GUEST</span>
             </div>
@@ -974,7 +968,7 @@
 
                 <div class="status" id="vtStatus" aria-live="polite">
                   <span class="badge" id="vtBadge">VT: NOT RUN</span>
-                  <span id="vtText">VirusTotal check is shown as a UI flow here (no network requests).</span>
+                  <span id="vtText">Malware check is shown as a UI flow here (no network requests).</span>
                 </div>
               </div>
 
@@ -1027,10 +1021,9 @@
 
         <article class="block reveal" id="security">
           <div class="block-inner">
-            <h3>VirusTotal confirmation UX</h3>
+            <h3>Malware Scan & Confirmation</h3>
             <p class="copy">
-              Your requirement: “use VirusTotal API to tell the user to confirm malicious downloads.”
-              The best UX pattern is: <b>scan at upload</b>, then gate downloads with a <b>clear confirmation screen</b> if detections exceed a threshold.
+              To implement your requirement, the best UX pattern is: <b>scan at upload</b>, then gate downloads with a <b>clear confirmation screen</b> if detections exceed a threshold.
             </p>
 
             <div class="policy" aria-label="Download confirmation flow">
@@ -1049,13 +1042,13 @@
             </div>
 
             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
-              <button class="btn" type="button" id="runVtDemo">Run VT demo scan</button>
-              <button class="btn" type="button" id="openDownloadConfirm">Open “confirm download” modal</button>
+              <button class="btn" type="button" id="runVtDemo">Run Scan (demo)</button>
+              <button class="btn" type="button" id="openDownloadConfirm">Open Confirm Modal</button>
               <span class="badge warn" id="vtPolicyBadge" style="display:none">POLICY: CONFIRM REQUIRED</span>
             </div>
 
             <p class="copy" style="margin-top:12px; color:var(--faint); font-family:'IBM Plex Mono', monospace; font-size:12px;">
-              Note: This file is a frontend demo; it does not call VirusTotal. In production, keep the API key server-side.
+              Note: This file is a frontend demo; it does not call an online scanning service. In production, keep the API key server-side.
             </p>
           </div>
         </article>
@@ -1155,7 +1148,7 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2l9 4.5v11L12 22l-9-4.5v-11L12 2z" stroke="currentColor" stroke-width="2"/><path d="M12 22V12" stroke="currentColor" stroke-width="2"/><path d="M21 6.5l-9 5-9-5" stroke="currentColor" stroke-width="2"/></svg>
               <div>
                 <b>Backend API</b>
-                <span>Handles auth, metadata, expiration, and signed upload/download URLs. Keep VirusTotal key here.</span>
+                <span>Handles auth, metadata, expiration, and signed upload/download URLs. Keep the malware scan API key here.</span>
               </div>
             </li>
             <li>
@@ -1202,8 +1195,8 @@
       </div>
       <div class="fine">
         This single-file page demonstrates UX for: 2TB limit messaging, no-subscription positioning, expiration controls,
-        VirusTotal-style confirmation, password policy validation, and guest inactivity retention.
-        <br/>To go live, you’ll need a backend + object storage. Keep all secrets (VirusTotal, signing keys) server-side.
+        malware scan confirmation, password policy validation, and guest inactivity retention.
+        <br/>To go live, you’ll need a backend + object storage. Keep all secrets (API keys, signing keys) server-side.
       </div>
     </div>
   </footer>
@@ -1331,7 +1324,7 @@
       <div class="modal-grid">
         <section class="auth">
           <h4>Scan summary (demo)</h4>
-          <p class="hint">In production, populate this from your backend’s VirusTotal verdict.</p>
+          <p class="hint">In production, populate this from your backend’s scan verdict.</p>
 
           <div class="policy" style="margin-top:0">
             <div class="step">
@@ -1377,8 +1370,7 @@
           </div>
         </section>
       </div>
-    </div>
-  </dialog>
+    </dialog>
 
   <!-- File Display Modal -->
   <dialog id="fileDisplayModal">
@@ -1391,6 +1383,48 @@
           </button>
       </div>
   </dialog>
+
+  <!-- NEW: Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+        getAuth, 
+        onAuthStateChanged, 
+        createUserWithEmailAndPassword, 
+        signInWithEmailAndPassword, 
+        signOut 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { 
+        getFirestore, 
+        collection, 
+        doc, 
+        getDoc,
+        getDocs, 
+        setDoc, 
+        addDoc, 
+        deleteDoc, 
+        query, 
+        where 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4vi12j4l93u4d2JRlrXhTnKt1zVYg50E",
+      authDomain: "vaultdrop-5b0a3.firebaseapp.com",
+      projectId: "vaultdrop-5b0a3",
+      storageBucket: "vaultdrop-5b0a3.appspot.com",
+      messagingSenderId: "441585596269",
+      appId: "1:441585596269:web:89ff09df5c3ecfaa230c64"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Make auth and db globally available to the next script
+    window.firebase = { auth, db, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query, where };
+  </script>
 
   <script>
     // ---------- Utilities ----------
@@ -1462,48 +1496,61 @@
     const loginUsername = $("#loginUsername"), loginPassword = $("#loginPassword"), loginBtn = $("#loginBtn");
     const confirmDialog = $("#confirmDialog"), openDownloadConfirm = $("#openDownloadConfirm"), closeConfirm = $("#closeConfirm"), cancelDownload = $("#cancelDownload"), proceedDownload = $("#proceedDownload"), dlFileName = $("#dlFileName"), dlDetections = $("#dlDetections");
     const homeDirectory = $("#homeDirectory"), mainContent = $("#mainContent"), fileList = $("#fileList"), noFilesMessage = $("#noFilesMessage");
-    const homeNav = $("#homeNav"), homeBtn = $("#homeBtn");
+    const homeBtn = $("#homeBtn");
     const fileDisplayModal = $("#fileDisplayModal"), fileDisplayIcon = $("#fileDisplayIcon"), fileDisplayName = $("#fileDisplayName"), fileDisplayActions = $("#fileDisplayActions"), closeFileDisplay = $("#closeFileDisplay");
 
     // ---------- UI State Management ----------
-    function renderLoginState(){
-      const loggedIn = state.isLoggedIn;
-      homeNav.classList.toggle('hidden', !loggedIn);
-      signOutBtn.classList.toggle('hidden', !loggedIn);
-      openAuth.classList.toggle('hidden', loggedIn);
+    async function renderLoginState(user){
+      state.isLoggedIn = !!user;
+      state.user = user;
 
-      if(loggedIn){
-        planBadge.textContent = `USER: ${state.user.username}`;
-        homeUserBadge.textContent = `SIGNED IN AS ${state.user.username.toUpperCase()}`;
+      homeBtn.classList.toggle('hidden', !state.isLoggedIn);
+      signOutBtn.classList.toggle('hidden', !state.isLoggedIn);
+      openAuth.classList.toggle('hidden', state.isLoggedIn);
+
+      if(state.isLoggedIn){
+        const userDoc = await window.firebase.getDoc(window.firebase.doc(window.firebase.db, "users", user.uid));
+        const username = userDoc.exists() ? userDoc.data().username : "User";
+        state.user.username = username;
+
+        planBadge.textContent = `USER: ${username}`;
+        homeUserBadge.textContent = `SIGNED IN AS ${username.toUpperCase()}`;
         planBadge.className = "badge ok";
-        mainContent.classList.add('hidden'); // Hide hero content when logged in
+        mainContent.classList.add('hidden');
         homeDirectory.classList.remove('hidden');
+        await fetchUserFiles();
       } else {
         planBadge.textContent = "PLAN: GUEST";
         planBadge.className = "badge";
         mainContent.classList.remove('hidden');
         homeDirectory.classList.add('hidden');
+        state.files = [];
+        renderFileList();
       }
-      renderFileList();
     }
 
     homeBtn.addEventListener('click', () => {
         homeDirectory.classList.toggle('hidden');
+        mainContent.classList.toggle('hidden', !homeDirectory.classList.contains('hidden'));
     });
 
     // ---------- Home Directory File List ----------
+    async function fetchUserFiles() {
+        if (!state.user) return;
+        const q = window.firebase.query(window.firebase.collection(window.firebase.db, "files"), window.firebase.where("ownerId", "==", state.user.uid));
+        const querySnapshot = await window.firebase.getDocs(q);
+        state.files = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderFileList();
+    }
+
     function renderFileList(){
-      if(!state.isLoggedIn){ return; }
       fileList.innerHTML = '';
-
-      const filesToRender = state.files.filter(f => f.owner === state.user.username);
-
-      if(filesToRender.length === 0){
+      if(state.files.length === 0){
         fileList.appendChild(noFilesMessage);
         noFilesMessage.classList.remove('hidden');
       } else {
         noFilesMessage.classList.add('hidden');
-        filesToRender.forEach(file => {
+        state.files.forEach(file => {
           const item = document.createElement('div');
           item.className = 'file-item';
           item.dataset.id = file.id;
@@ -1529,7 +1576,7 @@
     }
 
     // ---------- File Menu Logic ----------
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', async (e) => {
         const menuBtn = e.target.closest('.file-menu-btn');
         if (menuBtn) {
             const parentItem = menuBtn.closest('.file-item');
@@ -1556,19 +1603,14 @@
 
         if (e.target.closest('.copy-link')) {
             navigator.clipboard.writeText(file.link);
-            e.target.closest('.copy-link').textContent = 'Copied!';
-            setTimeout(() => e.target.closest('.copy-link').innerHTML = `<svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72" stroke="currentColor" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72" stroke="currentColor" stroke-width="2"/></svg>Copy Link`, 1500);
         } else if (e.target.closest('.copy-direct-link')) {
-            navigator.clipboard.writeText(file.link); // Demo: same link
-            e.target.closest('.copy-direct-link').textContent = 'Copied!';
-            setTimeout(() => e.target.closest('.copy-direct-link').innerHTML = `<svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72" stroke="currentColor" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72" stroke="currentColor" stroke-width="2"/></svg>Copy Direct Link`, 1500);
+            navigator.clipboard.writeText(file.link);
         } else if (e.target.closest('.download')) {
             alert(`Demo: Downloading "${file.name}"`);
         } else if (e.target.closest('.delete')) {
             if (confirm(`Are you sure you want to delete "${file.name}"? This cannot be undone.`)) {
-                state.files = state.files.filter(f => f.id !== fileId);
-                saveState();
-                renderFileList();
+                await window.firebase.deleteDoc(window.firebase.doc(window.firebase.db, "files", fileId));
+                await fetchUserFiles();
             }
         }
     });
@@ -1599,8 +1641,6 @@
       fileName.textContent = f.name || "Unnamed file";
       fileMeta.textContent = `${formatBytes(f.size)} • ready to upload (demo)`;
       shareLink.textContent = "—";
-      state.vt = { ran:false, detections:0, suspicious:false };
-      renderVT();
     }
     dropZone.addEventListener("click", () => fileInput.click());
     dropZone.addEventListener("keydown", (e) => { if(e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }});
@@ -1621,124 +1661,44 @@
     function showFileDisplay(file){
         fileDisplayName.textContent = file.name;
         fileDisplayIcon.innerHTML = getFileIcon(file.name);
-        fileDisplayActions.innerHTML = `
-            <button class="btn copy-link">Copy Link</button>
-            <button class="btn copy-direct-link">Copy Direct Link</button>
-            <button class="btn primary download">Download</button>
-        `;
+        fileDisplayActions.innerHTML = `<button class="btn copy-link" data-link="${file.link}">Copy Link</button><button class="btn primary download">Download</button>`;
         fileDisplayModal.showModal();
-
-        const copyBtn = fileDisplayActions.querySelector('.copy-link');
-        copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(file.link);
-            copyBtn.textContent = 'Copied!';
-            setTimeout(() => copyBtn.textContent = 'Copy Link', 1500);
-        });
-        // Add similar logic for other buttons if needed
     }
     closeFileDisplay.addEventListener('click', () => fileDisplayModal.close());
 
 
-    $("#simulateUpload").addEventListener("click", ()=>{
+    $("#simulateUpload").addEventListener("click", async ()=>{
       if(!state.currentFile){
-        vtText.textContent = "Pick a file first (demo).";
-        vtBadge.textContent = "VT: WAITING";
+        vtText.textContent = "Pick a file first.";
+        return;
+      }
+      if(!state.isLoggedIn) {
+        alert("Please sign in to upload files.");
         return;
       }
 
-      const gb = state.currentFile.size / (1024**3);
-      state.usedGB = clamp(state.usedGB + gb, 0, state.quotaGB);
-      renderQuota();
-
       const token = randomToken();
       const newLink = `https://vault-drop-ten.vercel.app/${token}`;
-      shareLink.textContent = newLink;
-
+      
       const newFile = {
-          id: token,
           name: state.currentFile.name,
           size: state.currentFile.size,
           link: newLink,
           uploadedAt: new Date(),
-          owner: state.isLoggedIn ? state.user.username : 'guest'
+          ownerId: state.user.uid
       };
 
-      state.files.push(newFile);
-      if(state.isLoggedIn) {
-          renderFileList();
-      }
-      saveState();
-      showFileDisplay(newFile); // Show the visual file page modal
-
-      vtText.textContent = "Uploaded (demo).";
-      vtBadge.textContent = "VT: PENDING";
-    });
-
-    copyLink.addEventListener("click", async ()=>{
-      const text = shareLink.textContent.trim();
-      if(text === "—") return;
-      try{
-        await navigator.clipboard.writeText(text);
-        copyLink.textContent = "Copied";
-        setTimeout(()=>copyLink.textContent="Copy", 900);
-      }catch{
-        copyLink.textContent = "Copy failed";
-        setTimeout(()=>copyLink.textContent="Copy", 900);
+      try {
+        await window.firebase.addDoc(window.firebase.collection(window.firebase.db, "files"), newFile);
+        await fetchUserFiles();
+        showFileDisplay(newFile);
+      } catch (error) {
+        console.error("Error adding document: ", error);
+        alert("Could not save file data. Please try again.");
       }
     });
-
-    // ---------- VT & Download Modals ----------
-    function renderVT(){ /* ... no changes ... */ }
-    $("#runVtDemo").addEventListener("click", ()=>{ /* ... no changes ... */ });
-    function openConfirm(){ /* ... no changes ... */ }
-    openDownloadConfirm.addEventListener("click", openConfirm);
-    closeConfirm.addEventListener("click", ()=>confirmDialog.close());
-    cancelDownload.addEventListener("click", ()=>confirmDialog.close());
-    proceedDownload.addEventListener("click", ()=>{ /* ... no changes ... */ });
 
     // ---------- Auth & Persistence ----------
-    function saveState() {
-        try {
-            const appState = {
-                isLoggedIn: state.isLoggedIn,
-                user: state.user,
-                files: state.files,
-                usedGB: state.usedGB
-            };
-            localStorage.setItem('vaultDropState', JSON.stringify(appState));
-        } catch (e) { console.error("Could not save state", e); }
-    }
-
-    function loadState() {
-        try {
-            const savedState = localStorage.getItem('vaultDropState');
-            if (savedState) {
-                const parsed = JSON.parse(savedState);
-                state.isLoggedIn = parsed.isLoggedIn || false;
-                state.user = parsed.user || null;
-                state.files = parsed.files || [];
-                state.usedGB = parsed.usedGB || 0;
-            }
-        } catch (e) {
-            console.error("Could not load state", e);
-            localStorage.removeItem('vaultDropState');
-        }
-    }
-
-    function loadUsers() {
-        try {
-            const users = localStorage.getItem('vaultDropUsers');
-            return users ? JSON.parse(users) : [];
-        } catch (e) { return []; }
-    }
-
-    function saveUsers(users) {
-        try {
-            localStorage.setItem('vaultDropUsers', JSON.stringify(users));
-        } catch (e) { console.error("Could not save users", e); }
-    }
-
-
     openAuth.addEventListener("click", () => authDialog.showModal());
     $("#openRegister").addEventListener("click", () => authDialog.showModal());
     closeAuth.addEventListener("click", ()=>authDialog.close());
@@ -1746,91 +1706,89 @@
     const specialRE = /[^A-Za-z0-9\s]/g, spaceRE = /\s/;
     function validatePassword(pw){
       const lenOK = pw.length >= 9, specials = (pw.match(specialRE) || []).length, specialsOK = specials >= 2, noSpaces = !spaceRE.test(pw);
-      return { lenOK, specials, specialsOK, noSpaces, ok: lenOK && specialsOK && noSpaces };
+      return { ok: lenOK && specialsOK && noSpaces };
     }
     function renderPw(){
       const pw = regPassword.value || "", r = validatePassword(pw);
-      pwChecks.textContent = [`${r.lenOK?"PASS":"FAIL"}•len≥9`, `${r.specialsOK?"PASS":"FAIL"}•specials≥2(${r.specials})`, `${r.noSpaces?"PASS":"FAIL"}•no spaces`].join(" | ");
-      pwHelp.style.borderColor = r.ok ? "rgba(105,230,166,.30)" : "rgba(255,93,93,.25)";
-      pwHelp.style.background = r.ok ? "rgba(105,230,166,.06)" : "rgba(255,93,93,.05)";
       registerBtn.disabled = !r.ok;
     }
     regPassword.addEventListener("input", renderPw);
 
-    registerBtn.addEventListener("click", ()=>{
+    registerBtn.addEventListener("click", async ()=>{
       registerBtn.disabled = true;
       regStatus.style.opacity = 1;
       regStatus.className = 'reg-status';
 
-      const username = regUsername.value.trim().toLowerCase();
+      const username = regUsername.value.trim();
+      const password = regPassword.value;
+      // Use a dummy email for Firebase Auth, as it requires one
+      const email = `${username.toLowerCase()}@vaultdrop.app`;
+
       if (!username) {
-          // Handle empty username case if needed
           renderPw();
           return;
       }
 
-      const existingUsers = loadUsers();
-      if (existingUsers.includes(username)) {
+      // Check if username is taken in Firestore
+      const q = window.firebase.query(window.firebase.collection(window.firebase.db, "users"), window.firebase.where("username_lowercase", "==", username.toLowerCase()));
+      const querySnapshot = await window.firebase.getDocs(q);
+      
+      if (!querySnapshot.empty) {
           regStatus.classList.add('error');
           regStatusText.textContent = "Username is already taken.";
-          regStatus.querySelector('svg').innerHTML = `<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>`;
-          setTimeout(() => {
-              regStatus.style.opacity = 0;
-              renderPw();
-          }, 2500);
+          setTimeout(() => { regStatus.style.opacity = 0; renderPw(); }, 2500);
           return;
       }
 
       regStatusText.textContent = "Registering...";
-      regStatus.querySelector('svg').innerHTML = `<path d="M12 22a10 10 0 1 0-10-10 10 10 0 0 0 10 10z" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`;
+      try {
+        const userCredential = await window.firebase.createUserWithEmailAndPassword(window.firebase.auth, email, password);
+        const user = userCredential.user;
 
-      setTimeout(() => {
-        existingUsers.push(username);
-        saveUsers(existingUsers);
+        // Save username mapping in Firestore
+        await window.firebase.setDoc(window.firebase.doc(window.firebase.db, "users", user.uid), {
+            username: username,
+            username_lowercase: username.toLowerCase()
+        });
 
         regStatus.classList.add('ok');
         regStatusText.textContent = "Registered! You can now sign in.";
-        regStatus.querySelector('svg').innerHTML = `<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
-        
-        setTimeout(() => {
-          regStatus.style.opacity = 0;
-          renderPw();
-        }, 2500);
-      }, 2000);
+        setTimeout(() => { authDialog.close(); regStatus.style.opacity = 0; renderPw(); }, 2000);
+
+      } catch (error) {
+        regStatus.classList.add('error');
+        regStatusText.textContent = error.message;
+        setTimeout(() => { regStatus.style.opacity = 0; renderPw(); }, 3000);
+      }
     });
 
-    loginBtn.addEventListener("click", ()=>{
-      const username = loginUsername.value.trim();
-      if(!username){
-        alert("Please enter a username to sign in (demo).");
-        return;
-      }
-      state.isLoggedIn = true;
-      state.user = { username: username };
-      saveState();
-      renderLoginState();
-      authDialog.close();
+    loginBtn.addEventListener("click", async ()=>{
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value;
+        if(!username || !password) {
+            alert("Please enter username and password.");
+            return;
+        }
+        // Firebase Auth uses email, so we construct the dummy email
+        const email = `${username.toLowerCase()}@vaultdrop.app`;
+        try {
+            await window.firebase.signInWithEmailAndPassword(window.firebase.auth, email, password);
+            authDialog.close();
+        } catch (error) {
+            alert("Failed to sign in: " + error.message);
+        }
     });
 
     signOutBtn.addEventListener("click", () => {
-      state.isLoggedIn = false;
-      state.user = null;
-      saveState();
-      renderLoginState();
+      window.firebase.signOut(window.firebase.auth);
     });
 
-    document.addEventListener("keydown", (e)=>{
-      if(e.key === "Escape"){
-        if(authDialog.open) authDialog.close();
-        if(confirmDialog.open) confirmDialog.close();
-        if(fileDisplayModal.open) fileDisplayModal.close();
-      }
+    // Central Auth listener
+    window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
+        renderLoginState(user);
     });
 
     // Initial Load
-    loadState();
-    renderLoginState();
-    renderQuota();
     renderPw();
   </script>
 </body>
