@@ -12,6 +12,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
+  <!-- Back4App Parse SDK -->
+  <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+
   <style>
     :root{
       /* Aesthetic: Secure / technical / premium. Dark graphite + warm brass accents */
@@ -920,6 +923,15 @@
                 <input id="fileInput" type="file" />
               </div>
 
+              <!-- New: Folder Name Input for Logged-in Users -->
+              <div class="field hidden" id="folderNameField">
+                <label for="folderName">Folder Name (optional)</label>
+                <div class="control">
+                  <input id="folderName" type="text" placeholder="e.g., My Documents" />
+                  <span class="mono">FOLDER</span>
+                </div>
+              </div>
+
               <div class="row">
                 <div class="field">
                   <label for="expireUnit">Expiration unit</label>
@@ -1370,7 +1382,8 @@
           </div>
         </section>
       </div>
-    </dialog>
+    </div>
+  </dialog>
 
   <!-- File Display Modal -->
   <dialog id="fileDisplayModal">
@@ -1384,49 +1397,16 @@
       </div>
   </dialog>
 
-  <!-- NEW: Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { 
-        getAuth, 
-        onAuthStateChanged, 
-        createUserWithEmailAndPassword, 
-        signInWithEmailAndPassword, 
-        signOut 
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { 
-        getFirestore, 
-        collection, 
-        doc, 
-        getDoc,
-        getDocs, 
-        setDoc, 
-        addDoc, 
-        deleteDoc, 
-        query, 
-        where 
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyD4vi12j4l93u4d2JRlrXhTnKt1zVYg50E",
-      authDomain: "vaultdrop-5b0a3.firebaseapp.com",
-      projectId: "vaultdrop-5b0a3",
-      storageBucket: "vaultdrop-5b0a3.appspot.com",
-      messagingSenderId: "441585596269",
-      appId: "1:441585596269:web:89ff09df5c3ecfaa230c64"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // Make auth and db globally available to the next script
-    window.firebase = { auth, db, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query, where };
-  </script>
-
   <script>
+    // --- Back4App Initialization ---
+    const APP_ID = 'LM96PJF7bvbj4R47Mf7uZHOdI8MR6yMjIKkOB20a';
+    const CLIENT_KEY = 'jErszH8DnICrlbvH0how2ZhK6pymUxSVL8Ixw0bM';
+    Parse.initialize(APP_ID, CLIENT_KEY);
+    Parse.serverURL = 'https://parseapi.back4app.com/';
+
+    // Define Parse classes
+    const FileMetadata = Parse.Object.extend("FileMetadata");
+
     // ---------- Utilities ----------
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => root.querySelectorAll(sel);
@@ -1475,9 +1455,9 @@
     // ---------- App State ----------
     const state = {
       isLoggedIn: false,
-      user: null,
-      files: [],
-      currentFile: null,
+      user: null, // Will store Parse.User object
+      files: [], // Will store FileMetadata Parse.Objects
+      currentFile: null, // The actual File object from input
       usedGB: 0,
       quotaGB: 2048,
       vt: { ran: false, detections: 0, suspicious: false },
@@ -1486,6 +1466,7 @@
 
     // ---------- Elements ----------
     const fileInput = $("#fileInput"), dropZone = $("#dropZone"), fileName = $("#fileName"), fileMeta = $("#fileMeta"), browseBtn = $("#browseBtn");
+    const folderNameField = $("#folderNameField"), folderNameInput = $("#folderName"); // New elements
     const expireUnit = $("#expireUnit"), expireValue = $("#expireValue"), expiryPreview = $("#expiryPreview");
     const quotaText = $("#quotaText"), quotaFill = $("#quotaFill");
     const shareLink = $("#shareLink"), copyLink = $("#copyLink");
@@ -1500,21 +1481,19 @@
     const fileDisplayModal = $("#fileDisplayModal"), fileDisplayIcon = $("#fileDisplayIcon"), fileDisplayName = $("#fileDisplayName"), fileDisplayActions = $("#fileDisplayActions"), closeFileDisplay = $("#closeFileDisplay");
 
     // ---------- UI State Management ----------
-    async function renderLoginState(user){
-      state.isLoggedIn = !!user;
-      state.user = user;
+    async function renderLoginState(){
+      const currentUser = Parse.User.current();
+      state.isLoggedIn = !!currentUser;
+      state.user = currentUser;
 
       homeBtn.classList.toggle('hidden', !state.isLoggedIn);
       signOutBtn.classList.toggle('hidden', !state.isLoggedIn);
       openAuth.classList.toggle('hidden', state.isLoggedIn);
+      folderNameField.classList.toggle('hidden', !state.isLoggedIn); // Show/hide folder input
 
       if(state.isLoggedIn){
-        const userDoc = await window.firebase.getDoc(window.firebase.doc(window.firebase.db, "users", user.uid));
-        const username = userDoc.exists() ? userDoc.data().username : "User";
-        state.user.username = username;
-
-        planBadge.textContent = `USER: ${username}`;
-        homeUserBadge.textContent = `SIGNED IN AS ${username.toUpperCase()}`;
+        planBadge.textContent = `USER: ${state.user.get('username')}`;
+        homeUserBadge.textContent = `SIGNED IN AS ${state.user.get('username').toUpperCase()}`;
         planBadge.className = "badge ok";
         mainContent.classList.add('hidden');
         homeDirectory.classList.remove('hidden');
@@ -1537,10 +1516,24 @@
     // ---------- Home Directory File List ----------
     async function fetchUserFiles() {
         if (!state.user) return;
-        const q = window.firebase.query(window.firebase.collection(window.firebase.db, "files"), window.firebase.where("ownerId", "==", state.user.uid));
-        const querySnapshot = await window.firebase.getDocs(q);
-        state.files = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderFileList();
+        const query = new Parse.Query(FileMetadata);
+        query.equalTo("owner", state.user); // Link files to the current user
+        try {
+            const results = await query.find();
+            state.files = results.map(obj => ({
+                id: obj.id,
+                name: obj.get('name'),
+                size: obj.get('size'),
+                link: obj.get('file').url(), // Get direct URL from Parse.File
+                folder: obj.get('folder') || '',
+                parseFileObject: obj.get('file'), // Store the Parse.File object for deletion
+                parseMetadataObject: obj // Store the FileMetadata object for deletion
+            }));
+            renderFileList();
+        } catch (error) {
+            console.error("Error fetching user files:", error);
+            // Optionally show an error message to the user
+        }
     }
 
     function renderFileList(){
@@ -1560,12 +1553,11 @@
             </button>
             <div class="icon" aria-hidden="true">${getFileIcon(file.name)}</div>
             <div class="details">
-              <div class="name">${file.name}</div>
+              <div class="name">${file.folder ? file.folder + '/' : ''}${file.name}</div>
               <div class="meta">${formatBytes(file.size)}</div>
             </div>
             <div class="file-menu">
                 <button class="copy-link"><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72" stroke="currentColor" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72" stroke="currentColor" stroke-width="2"/></svg>Copy Link</button>
-                <button class="copy-direct-link"><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72" stroke="currentColor" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72" stroke="currentColor" stroke-width="2"/></svg>Copy Direct Link</button>
                 <button class="download"><svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2"/></svg>Download</button>
                 <button class="delete"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2"/></svg>Delete</button>
             </div>
@@ -1603,14 +1595,22 @@
 
         if (e.target.closest('.copy-link')) {
             navigator.clipboard.writeText(file.link);
-        } else if (e.target.closest('.copy-direct-link')) {
-            navigator.clipboard.writeText(file.link);
+            alert('Link copied to clipboard!');
         } else if (e.target.closest('.download')) {
-            alert(`Demo: Downloading "${file.name}"`);
+            window.open(file.link, '_blank'); // Open file URL in new tab for download
         } else if (e.target.closest('.delete')) {
             if (confirm(`Are you sure you want to delete "${file.name}"? This cannot be undone.`)) {
-                await window.firebase.deleteDoc(window.firebase.doc(window.firebase.db, "files", fileId));
-                await fetchUserFiles();
+                try {
+                    // Delete the Parse.File object
+                    await file.parseFileObject.destroy();
+                    // Delete the FileMetadata object
+                    await file.parseMetadataObject.destroy();
+                    await fetchUserFiles(); // Refresh list
+                    alert('File deleted successfully!');
+                } catch (error) {
+                    console.error("Error deleting file:", error);
+                    alert("Failed to delete file: " + error.message);
+                }
             }
         }
     });
@@ -1639,7 +1639,7 @@
       if(!f) return;
       state.currentFile = f;
       fileName.textContent = f.name || "Unnamed file";
-      fileMeta.textContent = `${formatBytes(f.size)} • ready to upload (demo)`;
+      fileMeta.textContent = `${formatBytes(f.size)} • ready to upload`;
       shareLink.textContent = "—";
     }
     dropZone.addEventListener("click", () => fileInput.click());
@@ -1650,14 +1650,7 @@
     dropZone.addEventListener("drop", (e) => { if(e.dataTransfer?.files?.[0]) setFile(e.dataTransfer.files[0]); });
     fileInput.addEventListener("change", (e) => { if(e.target.files?.[0]) setFile(e.target.files[0]); });
 
-    // ---------- Upload Simulation & File Display ----------
-    function randomToken(len=11){
-      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-      let out = "";
-      for(let i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)];
-      return out;
-    }
-
+    // ---------- Upload & File Display ----------
     function showFileDisplay(file){
         fileDisplayName.textContent = file.name;
         fileDisplayIcon.innerHTML = getFileIcon(file.name);
@@ -1666,35 +1659,68 @@
     }
     closeFileDisplay.addEventListener('click', () => fileDisplayModal.close());
 
-
     $("#simulateUpload").addEventListener("click", async ()=>{
       if(!state.currentFile){
         vtText.textContent = "Pick a file first.";
         return;
       }
-      if(!state.isLoggedIn) {
-        alert("Please sign in to upload files.");
-        return;
+
+      const fileToUpload = state.currentFile;
+      let uploadFileName = fileToUpload.name;
+      let folderName = '';
+
+      if (state.isLoggedIn) {
+          folderName = folderNameInput.value.trim();
+          if (folderName) {
+              uploadFileName = `${folderName}/${fileToUpload.name}`; // Prepend folder name
+          }
       }
 
-      const token = randomToken();
-      const newLink = `https://vault-drop-ten.vercel.app/${token}`;
-      
-      const newFile = {
-          name: state.currentFile.name,
-          size: state.currentFile.size,
-          link: newLink,
-          uploadedAt: new Date(),
-          ownerId: state.user.uid
-      };
-
+      const parseFile = new Parse.File(uploadFileName, fileToUpload);
       try {
-        await window.firebase.addDoc(window.firebase.collection(window.firebase.db, "files"), newFile);
-        await fetchUserFiles();
-        showFileDisplay(newFile);
+          await parseFile.save(); // Uploads the file to Back4App storage
+
+          // Create a metadata entry in the FileMetadata class
+          const fileMetadata = new FileMetadata();
+          fileMetadata.set("name", fileToUpload.name);
+          fileMetadata.set("size", fileToUpload.size);
+          fileMetadata.set("file", parseFile); // Store a pointer to the actual file
+          fileMetadata.set("folder", folderName); // Store folder name
+
+          if (state.isLoggedIn) {
+              fileMetadata.set("owner", state.user); // Link to the current user
+          } else {
+              // For guest uploads, no owner is set. ACLs on FileMetadata must allow public create.
+          }
+
+          await fileMetadata.save(); // Save the metadata object
+
+          const fileLink = parseFile.url(); // Get the direct URL of the uploaded file
+          shareLink.textContent = fileLink;
+          vtText.textContent = "File uploaded successfully!";
+          vtBadge.textContent = "VT: OK";
+          vtBadge.className = "badge ok";
+
+          // Update UI for logged-in users
+          if (state.isLoggedIn) {
+              await fetchUserFiles();
+              showFileDisplay({ name: fileToUpload.name, link: fileLink });
+          } else {
+              alert(`Guest upload successful! Link: ${fileLink}`);
+          }
+
+          // Clear inputs
+          fileInput.value = '';
+          folderNameInput.value = '';
+          state.currentFile = null;
+          fileName.textContent = "Drop a file or click to pick";
+          fileMeta.textContent = "Max supported: 2TB (product requirement)";
+
       } catch (error) {
-        console.error("Error adding document: ", error);
-        alert("Could not save file data. Please try again.");
+          console.error("Error uploading file:", error);
+          vtText.textContent = `Upload Error: ${error.message}`;
+          vtBadge.textContent = "VT: ERROR";
+          vtBadge.className = "badge danger";
       }
     });
 
@@ -1709,10 +1735,18 @@
       return { ok: lenOK && specialsOK && noSpaces };
     }
     function renderPw(){
-      const pw = regPassword.value || "", r = validatePassword(pw);
+      const pw = regPassword.value || "";
+      const r = validatePassword(pw);
       registerBtn.disabled = !r.ok;
+      // Update password checks UI (original logic from the file)
+      let checksHtml = '';
+      checksHtml += `<div>${pw.length >= 9 ? '✅' : '❌'} At least 9 characters</div>`;
+      checksHtml += `<div>${(pw.match(specialRE) || []).length >= 2 ? '✅' : '❌'} At least 2 special characters</div>`;
+      checksHtml += `<div>${!spaceRE.test(pw) ? '✅' : '❌'} No spaces</div>`;
+      pwChecks.innerHTML = checksHtml;
     }
     regPassword.addEventListener("input", renderPw);
+    regUsername.addEventListener("input", renderPw); // Re-evaluate password on username change too, in case it affects registration button state
 
     registerBtn.addEventListener("click", async ()=>{
       registerBtn.disabled = true;
@@ -1721,39 +1755,27 @@
 
       const username = regUsername.value.trim();
       const password = regPassword.value;
-      // Use a dummy email for Firebase Auth, as it requires one
-      const email = `${username.toLowerCase()}@vaultdrop.app`;
+      const email = `${username.toLowerCase()}@vaultdrop.app`; // Back4App Parse.User requires an email
 
       if (!username) {
-          renderPw();
-          return;
-      }
-
-      // Check if username is taken in Firestore
-      const q = window.firebase.query(window.firebase.collection(window.firebase.db, "users"), window.firebase.where("username_lowercase", "==", username.toLowerCase()));
-      const querySnapshot = await window.firebase.getDocs(q);
-      
-      if (!querySnapshot.empty) {
           regStatus.classList.add('error');
-          regStatusText.textContent = "Username is already taken.";
+          regStatusText.textContent = "Username cannot be empty.";
           setTimeout(() => { regStatus.style.opacity = 0; renderPw(); }, 2500);
           return;
       }
 
       regStatusText.textContent = "Registering...";
       try {
-        const userCredential = await window.firebase.createUserWithEmailAndPassword(window.firebase.auth, email, password);
-        const user = userCredential.user;
+        const user = new Parse.User();
+        user.set("username", username);
+        user.set("password", password);
+        user.set("email", email); // Set a dummy email for Parse.User
 
-        // Save username mapping in Firestore
-        await window.firebase.setDoc(window.firebase.doc(window.firebase.db, "users", user.uid), {
-            username: username,
-            username_lowercase: username.toLowerCase()
-        });
+        await user.signUp();
 
         regStatus.classList.add('ok');
         regStatusText.textContent = "Registered! You can now sign in.";
-        setTimeout(() => { authDialog.close(); regStatus.style.opacity = 0; renderPw(); }, 2000);
+        setTimeout(() => { authDialog.close(); regStatus.style.opacity = 0; renderPw(); renderLoginState(); }, 2000);
 
       } catch (error) {
         regStatus.classList.add('error');
@@ -1769,27 +1791,66 @@
             alert("Please enter username and password.");
             return;
         }
-        // Firebase Auth uses email, so we construct the dummy email
-        const email = `${username.toLowerCase()}@vaultdrop.app`;
         try {
-            await window.firebase.signInWithEmailAndPassword(window.firebase.auth, email, password);
+            await Parse.User.logIn(username, password);
             authDialog.close();
+            renderLoginState();
         } catch (error) {
             alert("Failed to sign in: " + error.message);
         }
     });
 
-    signOutBtn.addEventListener("click", () => {
-      window.firebase.signOut(window.firebase.auth);
+    signOutBtn.addEventListener("click", async () => {
+      try {
+        await Parse.User.logOut();
+        renderLoginState();
+      } catch (error) {
+        console.error("Error logging out:", error);
+      }
     });
 
-    // Central Auth listener
-    window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
-        renderLoginState(user);
+    // Initial Load - Check for current user
+    Parse.User.currentAsync().then((user) => {
+        renderLoginState();
     });
 
-    // Initial Load
-    renderPw();
+    // --- Demo UI functions (from original file, kept as is) ---
+    $("#runVtDemo").addEventListener("click", ()=>{
+      vtBadge.textContent = "VT: SCANNING...";
+      vtBadge.className = "badge";
+      vtText.textContent = "Simulating malware scan...";
+      setTimeout(()=>{
+        state.vt.ran = true;
+        state.vt.detections = Math.floor(Math.random() * 10); // 0-9 detections
+        state.vt.suspicious = state.vt.detections >= 2;
+        vtBadge.textContent = state.vt.suspicious ? `VT: ${state.vt.detections} DETECTIONS` : "VT: CLEAN";
+        vtBadge.className = state.vt.suspicious ? "badge warn" : "badge ok";
+        vtText.textContent = state.vt.suspicious ? `This file was flagged by ${state.vt.detections} engines.` : "No malware detected.";
+        vtPolicyBadge.classList.toggle('hidden', !state.vt.suspicious);
+      }, 1500);
+    });
+
+    $("#openDownloadConfirm").addEventListener("click", ()=>{
+      dlFileName.textContent = state.currentFile?.name || "unknown.zip";
+      dlDetections.textContent = state.vt.detections;
+      confirmDialog.showModal();
+    });
+    $("#closeConfirm").addEventListener("click", ()=>confirmDialog.close());
+    $("#cancelDownload").addEventListener("click", ()=>confirmDialog.close());
+    $("#proceedDownload").addEventListener("click", ()=>{
+      alert("Download confirmed and logged (demo).");
+      confirmDialog.close();
+    });
+
+    $("#copyLink").addEventListener("click", () => {
+        if (shareLink.textContent && shareLink.textContent !== '—') {
+            navigator.clipboard.writeText(shareLink.textContent);
+            alert('Share link copied to clipboard!');
+        } else {
+            alert('No link to copy yet. Upload a file first!');
+        }
+    });
+
   </script>
 </body>
 </html>
