@@ -1406,6 +1406,28 @@
 
     // Define Parse classes
     const FileMetadata = Parse.Object.extend("FileMetadata");
+  
+  // This function checks if the user is truly logged in
+async function validateCurrentUser() {
+  const currentUser = Parse.User.current();
+  if (currentUser) {
+    try {
+      // Ask the server to validate the user's session
+      await currentUser.fetch();
+      console.log("User session is valid.");
+      // If valid, show the upload section
+      document.getElementById('upload-section').style.display = 'block';
+      document.getElementById('register-button-id').style.display = 'none'; // <-- Use your real button ID
+    } catch (error) {
+      // The server said the session is invalid. Log the user out.
+      console.log("Invalid session, logging user out.");
+      Parse.User.logOut();
+    }
+  }
+}
+
+// Run the check as soon as the page loads
+validateCurrentUser();
 
     // ---------- Utilities ----------
     const $ = (sel, root=document) => root.querySelector(sel);
